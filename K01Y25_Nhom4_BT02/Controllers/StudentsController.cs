@@ -1,4 +1,8 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using K01Y25_Nhom4_BT02.DB;
+using K01Y25_Nhom4_BT02.DB.Table;
+using K01Y25_Nhom4_BT02.Models.Request.Student;
+using K01Y25_Nhom4_BT02.Models.Respone.Student;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace K01Y25_Nhom4_BT02.Controllers
@@ -7,6 +11,14 @@ namespace K01Y25_Nhom4_BT02.Controllers
     [ApiController]
     public class StudentsController : ControllerBase
     {
+        private readonly AppDbContext _context;
+
+        // Constructor để inject DbContext vào controller
+        public StudentsController(AppDbContext context)
+        {
+            _context = context;
+        }
+
         [HttpGet("getAll")]
         public IActionResult GetAll()
         {
@@ -20,10 +32,31 @@ namespace K01Y25_Nhom4_BT02.Controllers
         }
 
         [HttpPost("create")]
-        public IActionResult CreateStudents([FromBody] string value)
+        public async Task<IActionResult> Create([FromBody] Student_CreateReq model)
         {
-            return Ok();
+            if (string.IsNullOrEmpty(model.lastname) || string.IsNullOrEmpty(model.firstname) || model.enrollmentdate == null)
+            {
+                return BadRequest("Thông tin không hợp lệ.");
+            }
 
+            var student = new Student
+            {
+                lastname = model.lastname,
+                firstname = model.firstname,
+                enrollmentdate = model.enrollmentdate
+            };
+
+            _context.Students.Add(student);
+            await _context.SaveChangesAsync();
+
+            var kq = new Student_CreateRes
+            {
+                lastname = student.lastname,
+                firstname = student.firstname,
+                enrollmentdate = student.enrollmentdate
+            };
+
+            return Ok(kq);
         }
 
         [HttpPut("update/{id}")]
