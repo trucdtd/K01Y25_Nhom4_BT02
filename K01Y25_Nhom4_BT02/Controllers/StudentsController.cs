@@ -34,29 +34,37 @@ namespace K01Y25_Nhom4_BT02.Controllers
         [HttpPost("create")]
         public async Task<IActionResult> Create([FromBody] Student_CreateReq model)
         {
-            if (string.IsNullOrEmpty(model.lastname) || string.IsNullOrEmpty(model.firstname) || model.enrollmentdate == null)
+            // Kiểm tra đầu vào không cho phép null
+            if (string.IsNullOrEmpty(model.LastName) || string.IsNullOrEmpty(model.FirstName))
             {
                 return BadRequest("Thông tin không hợp lệ.");
             }
 
+            // Tạo mới đối tượng sinh viên
             var student = new Student
             {
-                lastname = model.lastname,
-                firstname = model.firstname,
-                enrollmentdate = model.enrollmentdate
+                Lastname = model.LastName,
+                Firstmidname = model.FirstName,
+                Enrollmentdate = model.EnrollmentDate, // Không cần kiểm tra EnrollmentDate nữa
             };
 
-            _context.Students.Add(student);
-            await _context.SaveChangesAsync();
-
-            var kq = new Student_CreateRes
+            try
             {
-                lastname = student.lastname,
-                firstname = student.firstname,
-                enrollmentdate = student.enrollmentdate
-            };
+                // Thêm vào cơ sở dữ liệu
+                _context.Students.Add(student);
 
-            return Ok(kq);
+                // Lưu thay đổi vào cơ sở dữ liệu
+                await _context.SaveChangesAsync();
+
+                // Trả về kết quả
+                return Ok($"Sinh viên {model.FirstName} {model.LastName} đã được thêm thành công.");
+            }
+            catch (Exception ex)
+            {
+                // Ghi log lỗi vào console hoặc file log
+                Console.WriteLine($"Error: {ex.Message}"); // Log lỗi ở đây
+                return StatusCode(500, $"Đã xảy ra lỗi trong quá trình xử lý yêu cầu: {ex.Message}");
+            }
         }
 
         [HttpPut("update/{id}")]
